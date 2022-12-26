@@ -155,4 +155,68 @@ function renderSearchHistory() {
     renderCurrentWeather(city, data.list[0], data.city.timezone);
     renderForecast(data.list);
   }
+  function fetchWeather(location) {
+    var { lat } = location;
+    var { lon } = location;
+    var city = location.name;
   
+    var apiUrl = `${weatherApiRootUrl}/data/2.5/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${weatherApiKey}`;
+  
+    fetch(apiUrl)
+      .then(function (res) {
+        return res.json();
+      })
+      .then(function (data) {
+        renderItems(city, data);
+      })
+      .catch(function (err) {
+        console.error(err);
+      });
+  }
+  
+  function fetchCoords(search) {
+    var apiUrl = `${weatherApiRootUrl}/geo/1.0/direct?q=${search}&limit=5&appid=${weatherApiKey}`;
+  
+    fetch(apiUrl)
+      .then(function (res) {
+        return res.json();
+      })
+      .then(function (data) {
+        if (!data[0]) {
+          alert('Location not found');
+        } else {
+          appendToHistory(search);
+          fetchWeather(data[0]);
+        }
+      })
+      .catch(function (err) {
+        console.error(err);
+      });
+  }
+  
+  function handleSearchFormSubmit(e) {
+
+    if (!searchInput.value) {
+      return;
+    }
+  
+    e.preventDefault();
+    var search = searchInput.value.trim();
+    fetchCoords(search);
+    searchInput.value = '';
+  }
+  
+  function handleSearchHistoryClick(e) {
+
+    if (!e.target.matches('.btn-history')) {
+      return;
+    }
+  
+    var btn = e.target;
+    var search = btn.getAttribute('data-search');
+    fetchCoords(search);
+  }
+  
+  initSearchHistory();
+  searchForm.addEventListener('submit', handleSearchFormSubmit);
+  searchHistoryContainer.addEventListener('click', handleSearchHistoryClick);
